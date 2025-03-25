@@ -11,3 +11,6 @@ data/*
 # log
 log/*
 !log/.gitkeep
+
+# __pycache__
+__pycache__
