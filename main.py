@@ -9,7 +9,8 @@ from src.data.dataset import create_dataset
 from src.utils.seeds import fix_seed
 from src.visualization.visualize import plot
 from src.models.models import CNN
-from src.models.coachs import Coach
+from src.models.loss import kl_divergence
+from src.models.coachs import Coach, CoachDML
 
 def main():
 
@@ -26,11 +27,12 @@ def main():
     
     train_loader, test_loader = create_dataset(root=ROOT, download=True, batch_size=BATCH_SIZE)
 
-    model = CNN(widen_factor=1).to(device)
-    optimizer = optim.Adam(model.parameters(), lr=LR)
-    loss_fn = nn.CrossEntropyLoss()
+    model_1, model_2 = CNN(widen_factor=1).to(device), CNN(widen_factor=1).to(device)
+    optimizer_1, optimizer_2 = optim.Adam(model_1.parameters(), lr=LR), optim.Adam(model_2.parameters(), lr=LR)
+    loss_ce, loss_kl = nn.CrossEntropyLoss(), kl_divergence
 
-    coach = Coach(model, train_loader, test_loader, loss_fn, optimizer, device, EPOCHS)
+    coach = CoachDML([model_1, model_2], train_loader, test_loader, 
+                     [loss_ce, loss_kl], [optimizer_1, optimizer_2], device, EPOCHS)
     coach.train_test()
 
     print("accuracy: ", coach.test_acc[-1])
